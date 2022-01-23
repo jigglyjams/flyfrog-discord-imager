@@ -1,0 +1,18 @@
+{
+  "type": "module",
+  "dependencies": {
+    "@discordjs/rest": "^0.2.0-canary.0",
+    "axios": "^0.21.3",
+    "discord-api-types": "^0.26.1",
+    "discord.js": "^13.1.0",
+    "dotenv": "^10.0.0",
+    "web3": "^1.6.1"
+  },
+  "scripts": {
+    "start": "export NODE_ENV='prod' && node bot.js",
+    "dev": "export NODE_ENV='dev' && node bot.js"
+  },
+  "engines": {
+    "node": "16.x"
+  }
+}
