@@ -2,11 +2,14 @@ import { keys } from './keys.js';
 import { config } from './config.js';
 import { log, sleep } from './utils.js';
 import { Client, Intents, MessageEmbed, MessageAttachment } from 'discord.js';
+import fs from 'fs';
 const discord = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES] });
 
 import Web3 from 'web3';
 import axios from 'axios';
 var web3_http = new Web3(`${config.RPC_HTTP}/${keys.INFURA_KEY}`);
+
+const LOCAL_DATA = 1;
 
 async function getImage(src, tokenId) {
   console.log(`${src}/${tokenId}`);
@@ -46,6 +49,10 @@ async function getImage(src, tokenId) {
   }
 }
 
+async function getImageLocal(tokenId) {
+  return fs.readFileSync(`./data/images/flyfrog${tokenId}.png`)
+}
+
 async function getContract(contractAddress, http = 0) {
   const abi_url = `https://api.etherscan.io/api?module=contract&action=getabi&address=${contractAddress}&apikey=${keys.ETHERSCAN_KEY}`;
   const abi = await axios.get(abi_url).then((result) => {return JSON.parse(result.data.result)});
@@ -54,11 +61,15 @@ async function getContract(contractAddress, http = 0) {
 
 discord.on('messageCreate', async m => {
   if (!m.author.bot) {
-    if (m.content.indexOf('!ff') === 0) {
-      const id = m.content.split('!ff')[1].trim();
-      m.channel.sendTyping();
-      const png = await getImage(`${config.IPFS}/QmRdNB3Q6Q5gVWnduBmxNZb4p9zKFmM3Qx3tohBb8B2KRK`, id);
-      await sendMessage(config.CHANNEL, 'FlyFrog', id, png, config.MARKET);
+    if (m.content.indexOf('!fff') === 0) {
+      const id = m.content.split('!fff')[1].trim();
+      if (id >= 0 && id <= 9999) {
+        m.channel.sendTyping();
+        const png = (LOCAL_DATA === 1) ? await getImageLocal(id) : await getImage(`${config.IPFS}/QmRdNB3Q6Q5gVWnduBmxNZb4p9zKFmM3Qx3tohBb8B2KRK`, id);
+        await sendMessage(m.channelId, 'FlyFrog', id, png, config.MARKET);
+      } else {
+        await discord.channels.cache.get(m.channelId).send('tokenId out of bounds! must be 0-9999!');
+      }
     }
   }
 });
